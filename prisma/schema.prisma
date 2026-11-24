@@ -1,0 +1,45 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String?  @unique
+  passwordHash String?
+  nickname     String
+  avatar       String   @default("🎮")
+  isGuest      Boolean  @default(true)
+  totalWins    Int      @default(0)
+  gamesPlayed  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  matchesAsP1 Match[] @relation("Player1Matches")
+  matchesAsP2 Match[] @relation("Player2Matches")
+  wonMatches  Match[] @relation("WonMatches")
+
+  @@map("users")
+}
+
+model Match {
+  id        String   @id @default(uuid())
+  roomCode  String
+  gameType  String   @default("rock-paper-scissors")
+  player1Id String
+  player2Id String
+  winnerId  String?
+  p1Score   Int      @default(0)
+  p2Score   Int      @default(0)
+  createdAt DateTime @default(now())
+
+  player1 User  @relation("Player1Matches", fields: [player1Id], references: [id], onDelete: Cascade)
+  player2 User  @relation("Player2Matches", fields: [player2Id], references: [id], onDelete: Cascade)
+  winner  User? @relation("WonMatches", fields: [winnerId], references: [id], onDelete: SetNull)
+
+  @@map("matches")
+}
